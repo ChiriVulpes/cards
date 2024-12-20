@@ -18,7 +18,7 @@ export const dynamic = 'force-dynamic'
  * This would be tweaked over time based on how frequently we need to reimport
  * and what appears to be the fastest and most efficient for the database and CI (though for right now this just runs on a server route).
  */
-const BATCH_SIZE = 100
+const BATCH_SIZE = 1000
 
 export const GET = JSONEndpoint(async () => {
 	if (process.env.NODE_ENV !== 'development')
@@ -73,6 +73,7 @@ async function ingest () {
 
 		const gameName = game.game
 		const id = await updateGame(game, gameName)
+		gameIds.push(id)
 
 		console.log(`Processing ${gameName} data (${basename})`)
 
@@ -82,6 +83,7 @@ async function ingest () {
 			streamArray(),
 		] as const)
 
+		let batchIndex = 1
 		for await (const { value } of pipeline) {
 			const isInvalid = false
 				|| typeof value !== 'object' || value === null
@@ -98,11 +100,14 @@ async function ingest () {
 
 			batch.push(value)
 
-			if (batch.length >= BATCH_SIZE)
+			if (batch.length >= BATCH_SIZE) {
+				console.log('Processing batch', batchIndex++)
 				imported += await processBatch(id, batch)
+			}
 		}
 
 		// import leftovers (not full batch)
+		console.log('Processing batch', batchIndex++)
 		imported += await processBatch(id, batch)
 	}
 
