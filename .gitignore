@@ -40,8 +40,5 @@ yarn-error.log*
 
 .vscode
 
-# drizzle
-/db/migrations/meta/
-
 # import data
 /data/

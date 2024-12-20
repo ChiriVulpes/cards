@@ -31,13 +31,18 @@ export default [
 		},
 		rules: {
 			'no-constant-binary-expression': 'off',
+			'no-empty': ['warn', { allowEmptyCatch: true }],
 			'react/react-in-jsx-scope': 'off',
+			'@typescript-eslint/no-explicit-any': 'off',
 			'@typescript-eslint/no-namespace': 'off',
 			'@typescript-eslint/consistent-type-imports': 'warn',
+			'@stylistic/indent': 'off',
+			'@stylistic/multiline-ternary': 'off',
 			'@stylistic/spaced-comment': ['warn', 'always', { exceptions: ['/'], markers: ['#region', '#endregion'] }],
 			'@stylistic/space-before-function-paren': ['warn', 'always'],
 			'@stylistic/quotes': ['warn', 'single'],
 			'@stylistic/padded-blocks': ['warn', { blocks: 'never', classes: 'always' }],
+			'@stylistic/arrow-parens': ['warn', 'as-needed'],
 		},
 	},
 ]

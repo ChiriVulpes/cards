@@ -1,6 +1,6 @@
 import { db } from '@/db/db' // Assuming your Drizzle instance is exported here
 import type { AttributeTypes } from '@/db/schema'
-import { Attributes, CardBooleanAttributes, CardNumericAttributes, CardTextAttributes, Cards } from '@/db/schema'
+import { Attributes, CardBooleanAttributes, CardNumericAttributes, CardTextAttributes, Cards, GameAliases, Games } from '@/db/schema'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import * as fs from 'fs'
 import { glob } from 'glob'
@@ -41,6 +41,7 @@ interface CardInputGeneric extends CardInputShared {
 interface ManifestDefinition {
 	file: string
 	game: string
+	aliases?: string[]
 }
 
 async function ingest () {
@@ -58,15 +59,19 @@ async function ingest () {
 	if (manifest && !Array.isArray(manifest))
 		throw new Error('Manifest file is not an array with filenames and game names')
 
+	const gameIds: UUID[] = []
 	for (const file of files.filter(file => file !== manifestPath)) {
 		const basename = path.basename(file)
-		const game = manifest.find(definition => definition.file === basename.slice(0, basename.indexOf('.')))?.game
+		const game = manifest.find(definition => definition.file === basename.slice(0, basename.indexOf('.')))
 		if (!game) {
 			console.warn(`No game definition for ${basename}`)
 			continue
 		}
 
-		console.log(`Processing ${game} data (${basename})`)
+		const gameName = game.game
+		const id = await updateGame(game, gameName)
+
+		console.log(`Processing ${gameName} data (${basename})`)
 
 		const pipeline = chain([
 			fs.createReadStream(path.join(process.cwd(), file)),
@@ -86,25 +91,51 @@ async function ingest () {
 				continue
 			}
 
-			value.game = game
+			value.game = gameName
 
 			batch.push(value)
 
 			if (batch.length >= BATCH_SIZE)
-				imported += await processBatch(game, batch)
+				imported += await processBatch(id, batch)
 		}
 
 		// import leftovers (not full batch)
-		imported += await processBatch(game, batch)
+		imported += await processBatch(id, batch)
 	}
 
-	for (const game of manifest.map(({ game }) => game))
+	for (const game of gameIds)
 		await updateAttributeDefinitions(game)
+
+	await db.execute(sql`REFRESH MATERIALIZED VIEW CONCURRENTLY card_outputs`)
 
 	return imported
 }
 
-async function processBatch (game: string, batch: CardInputGeneric[]) {
+async function updateGame (game: ManifestDefinition, gameName: string) {
+	const [{ id }] = await db.insert(Games)
+		.values({ name: gameName })
+		.onConflictDoUpdate({
+			target: Games.name,
+			set: { name: sql`EXCLUDED.name` },
+		})
+		.returning({ id: Games.id })
+
+	await db.delete(GameAliases)
+		.where(eq(GameAliases.game,
+			db.select({ id: Games.id })
+				.from(Games)
+				.where(eq(Games.name, gameName))
+				.limit(1),
+		))
+
+	if (game.aliases?.length)
+		await db.insert(GameAliases)
+			.values(game.aliases.map(alias => ({ game: id, alias })))
+
+	return id as UUID
+}
+
+async function processBatch (game: UUID, batch: CardInputGeneric[]) {
 	if (!batch.length)
 		return 0
 
@@ -122,7 +153,7 @@ async function processBatch (game: string, batch: CardInputGeneric[]) {
 type UUID = string & { _uuid: true }
 type UUIDMap = Record<string, UUID>
 
-async function updateCards (game: string, batch: CardInputGeneric[]): Promise<UUIDMap> {
+async function updateCards (game: UUID, batch: CardInputGeneric[]): Promise<UUIDMap> {
 	const cards = batch.map(item => ({
 		oid: `${item.id}`,
 		name: item.name,
@@ -132,7 +163,7 @@ async function updateCards (game: string, batch: CardInputGeneric[]): Promise<UU
 	const ids = await db.insert(Cards)
 		.values(cards)
 		.onConflictDoUpdate({
-			target: Cards.oid,
+			target: [Cards.game, Cards.oid],
 			set: { name: sql`EXCLUDED.name` },
 		})
 		.returning({
@@ -201,8 +232,6 @@ function prepareCardAttributes (batch: CardInputGeneric[], ids: UUIDMap) {
 	}
 }
 
-// this is already ensured to be the correct value type
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function updateCardAttributes (table: typeof CardTextAttributes | typeof CardNumericAttributes | typeof CardBooleanAttributes, attributes: CardAttribute<any>[]) {
 	if (!attributes.length)
 		return
@@ -226,7 +255,7 @@ async function updateCardAttributes (table: typeof CardTextAttributes | typeof C
 		})
 }
 
-async function updateAttributeDefinitions (game: string) {
+async function updateAttributeDefinitions (game: UUID) {
 	const attributeTypes = db.$with('attribute_types')
 		.as(db
 			.selectDistinct({ name: CardTextAttributes.attribute, type: sql<AttributeTypes>`'text'::attribute_types`.as('type') })

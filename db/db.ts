@@ -1,3 +1,4 @@
+import { schema } from '@/db/schema'
 import { sql as vercelPool } from '@vercel/postgres'
 import { drizzle as localDrizzle } from 'drizzle-orm/node-postgres'
 import { drizzle as vercelDrizzle } from 'drizzle-orm/vercel-postgres'
@@ -12,4 +13,4 @@ if (process.env.NODE_ENV === 'development') {
 	})
 }
 
-export const db = localPool ? localDrizzle(localPool) : vercelDrizzle(vercelPool)
+export const db = localPool ? localDrizzle(localPool, { schema }) : vercelDrizzle(vercelPool, { schema })

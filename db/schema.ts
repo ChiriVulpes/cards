@@ -1,6 +1,16 @@
 import { sql } from 'drizzle-orm'
 import { boolean, decimal, index, jsonb, pgEnum, pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 
+export const Games = pgTable('games', {
+	id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
+	name: text('name').notNull().unique(),
+})
+
+export const GameAliases = pgTable('game_aliases', {
+	game: uuid('game').notNull().references(() => Games.id),
+	alias: text('alias').notNull(),
+})
+
 export const AttributeTypes = pgEnum('attribute_types', ['text', 'numeric', 'boolean'])
 export type AttributeTypes = typeof AttributeTypes.enumValues[number]
 
@@ -19,11 +29,12 @@ export const Attributes = pgTable('attributes',
 export const Cards = pgTable('cards',
 	{
 		id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
-		oid: text('oid').notNull().unique(),
+		oid: text('oid').notNull(),
 		name: text('name').notNull(),
-		game: text('game').notNull(),
+		game: uuid('game').notNull().references(() => Games.id),
 	},
 	Cards => [
+		uniqueIndex('cards_oid_game_unique').on(Cards.oid, Cards.game),
 		index('cards_oid_index').on(Cards.oid),
 		index('cards_name_index').on(Cards.name),
 	],
@@ -76,3 +87,13 @@ export const CardBooleanAttributes = pgTable('card_boolean_attributes',
 			.on(CardAttributes.attribute, sql`${CardAttributes.value} DESC`),
 	],
 )
+
+export const schema = {
+	Games,
+	GameAliases,
+	Attributes,
+	Cards,
+	CardTextAttributes,
+	CardNumericAttributes,
+	CardBooleanAttributes,
+}
