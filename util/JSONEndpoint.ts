@@ -1,13 +1,15 @@
 import ansi from '@/util/ansi'
 import Errors from '@/util/Errors'
-import type { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-export interface JSONEndpointResponse extends NextResponse {
+export interface JSONEndpointResponse {
 	extension?: any
 }
 
 export default function JSONEndpoint<T> (endpoint: (request: NextRequest, response: JSONEndpointResponse) => Promise<T>) {
-	return async (request: NextRequest, response: JSONEndpointResponse) => {
+	return async (request: NextRequest) => {
+		const response: JSONEndpointResponse = {}
+
 		let data: T | undefined
 		try {
 			data = await endpoint(request, response)
