@@ -1,10 +1,10 @@
 import { db } from '@/db/db' // Assuming your Drizzle instance is exported here
 import type { AttributeTypes } from '@/db/schema'
 import { Attributes, CardBooleanAttributes, CardNumericAttributes, CardTextAttributes, Cards, GameAliases, Games } from '@/db/schema'
+import JSONEndpoint from '@/util/JSONEndpoint'
 import { and, eq, notInArray, sql } from 'drizzle-orm'
 import * as fs from 'fs'
 import { glob } from 'glob'
-import { NextResponse } from 'next/server'
 import path from 'path'
 import { chain } from 'stream-chain'
 import { parser } from 'stream-json'
@@ -20,10 +20,13 @@ export const dynamic = 'force-dynamic'
  */
 const BATCH_SIZE = 100
 
-export async function GET () {
+export const GET = JSONEndpoint(async () => {
+	if (process.env.NODE_ENV !== 'development')
+		return new Response(null, { status: 403 })
+
 	const imported = await ingest()
-	return NextResponse.json({ imported })
-}
+	return { imported }
+})
 
 interface CardInputShared {
 	id: string | number
