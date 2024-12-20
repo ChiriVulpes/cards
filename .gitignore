@@ -42,3 +42,6 @@ yarn-error.log*
 
 # drizzle
 /db/migrations/meta/
+
+# import data
+/data/

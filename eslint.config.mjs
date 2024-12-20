@@ -30,6 +30,7 @@ export default [
 			},
 		},
 		rules: {
+			'no-constant-binary-expression': 'off',
 			'react/react-in-jsx-scope': 'off',
 			'@typescript-eslint/no-namespace': 'off',
 			'@typescript-eslint/consistent-type-imports': 'warn',
