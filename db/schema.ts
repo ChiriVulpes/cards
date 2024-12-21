@@ -21,7 +21,7 @@ export type AttributeTypes = typeof AttributeTypes.enumValues[number]
 
 export const Attributes = pgTable('attributes',
 	{
-		game: text('game').notNull(),
+		game: uuid('game').notNull().references(() => Games.id),
 		attribute: text('attribute').notNull(),
 		types: AttributeTypes('types').array().notNull(),
 		values: jsonb('values').notNull().default('[]'),
