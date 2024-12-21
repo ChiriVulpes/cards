@@ -3,7 +3,7 @@
 A project for automatically deciphering and querying JSON data for cards for various games.
 
 ## Testing out the deployed instance
-URL: TBD
+URL: https://chiri-cards.vercel.app/query
 
 ### Pagination
 The default (and maximum) page size is 100, but you can tweak this with, for example `page_size=50` if you only need a small subset of cards.
@@ -25,29 +25,29 @@ Here are the supported filters:
 `name=VALUE` or `name="VALUE"`  
 
 Examples: 
-- `/query?name=dragon`
-- `/query?name="The Sword Released"`
+- [`/query?name=dragon`](https://chiri-cards.vercel.app/query?name=dragon)
+- [`/query?name="The Sword Released"`](https://chiri-cards.vercel.app/query?name="The%20Sword%20Released")
 
 #### Game
 `game=VALUE` or `game="VALUE"`
 
 Examples:
-- `/query?game=mtg`
-- `/query?game=magic`
-- `/query?game=lorcana`
-- `/query?game="Magic: The Gathering"`
+- [`/query?game=mtg`](https://chiri-cards.vercel.app/query?game=mtg)
+- [`/query?game=magic`](https://chiri-cards.vercel.app/query?game=magic)
+- [`/query?game=lorcana`](https://chiri-cards.vercel.app/query?game=lorcana)
+- [`/query?game="Magic: The Gathering"`](https://chiri-cards.vercel.app/query?game="Magic:%20The%20Gathering")
 
 #### ID
 `id=VALUE`  
 Filters by a UUID assigned to each card. Note that UUIDs may change (in rare cases.)
 
-Example: `/query?id=ff722403-5dbe-492c-b544-82baf1c50f18`
+Example: [`/query?id=ff722403-5dbe-492c-b544-82baf1c50f18`](https://chiri-cards.vercel.app/query?id=ff722403-5dbe-492c-b544-82baf1c50f18)
 
 #### OID
 `oid=VALUE`  
 Filters by the "original" id associated with cards. Because cards can be sourced from multiple different data sets, these IDs may not be unique across games.
 
-Example: `/query?oid=improvise`
+Example: [`/query?oid=improvise`](https://chiri-cards.vercel.app/query?oid=improvise)
 
 #### Attribute Equals
 `attributes.NAME=VALUE`  
@@ -56,7 +56,7 @@ Filters by cards that have an attribute of the name `NAME` set to `VALUE`.
 If that attribute can never be set to that `VALUE`, the query will return a 400 error.
 
 Examples:
-- `/query?attributes.rarity=common&attributes.ink_cost=1`
+- [`/query?attributes.rarity=common&attributes.ink_cost=1`](https://chiri-cards.vercel.app/query?attributes.rarity=common&attributes.ink_cost=1)
 
 #### Attribute Equals Any Of
 `attributes.NAME=VALUE1,VALUE2`  
@@ -65,8 +65,8 @@ Filters by cards that have an attribute of the name `NAME` set to any of the pro
 If the attribute can never be set to any of the provided values, the query will return a 400 error.
 
 Examples:
-- `/query?attributes.rarity=common,uncommon`
-- `/query?attributes.color=w,g`
+- [`/query?attributes.rarity=common,uncommon`](https://chiri-cards.vercel.app/query?attributes.rarity=common,uncommon)
+- [`/query?attributes.color=w,g`](https://chiri-cards.vercel.app/query?attributes.color=w,g)
 
 #### Attribute Matches Range
 `attributes.NAME=MIN..MAX`  
@@ -81,12 +81,12 @@ If `MAX` is not provided, the range will be open on the top. IE, the expression 
 `..` on its own is ignored, that just matches everything.
 
 Examples:
-- `/query?attributes.ink_cost=..3` — cards where ink cost is less than 3
-- `/query?attributes.ink_cost=7..` — cards where ink cost is 7 or greater
-- `/query?attributes.ink_cost=4..7` — cards where ink cost is at least 4 and less than 7
+- [`/query?attributes.ink_cost=..3`](https://chiri-cards.vercel.app/query?attributes.ink_cost=..3) — cards where ink cost is less than 3
+- [`/query?attributes.ink_cost=7..`](https://chiri-cards.vercel.app/query?attributes.ink_cost=7..) — cards where ink cost is 7 or greater
+- [`/query?attributes.ink_cost=4..7`](https://chiri-cards.vercel.app/query?attributes.ink_cost=4..7) — cards where ink cost is at least 4 and less than 7
 
 **You can also use range checks within an "any of" list.**  
-Example: `/query?attributes.ink_cost=..3,8..` — cards where ink cost is less than 3 or at least 8
+Example: [`/query?attributes.ink_cost=..3,8..`](https://chiri-cards.vercel.app/query?attributes.ink_cost=..3,8..) — cards where ink cost is less than 3 or at least 8
 
 ## Setting up and running locally
 1. `pnpm install` (or use your node package manager of choice)

@@ -6,10 +6,15 @@ export const Games = pgTable('games', {
 	name: text('name').notNull().unique(),
 })
 
-export const GameAliases = pgTable('game_aliases', {
-	game: uuid('game').notNull().references(() => Games.id),
-	alias: text('alias').notNull(),
-})
+export const GameAliases = pgTable('game_aliases',
+	{
+		game: uuid('game').notNull().references(() => Games.id),
+		alias: text('alias').notNull(),
+	},
+	GameAliases => [
+		index('game_aliases_game_index').on(GameAliases.game),
+	],
+)
 
 export const AttributeTypes = pgEnum('attribute_types', ['text', 'numeric', 'boolean'])
 export type AttributeTypes = typeof AttributeTypes.enumValues[number]
@@ -35,8 +40,8 @@ export const Cards = pgTable('cards',
 	},
 	Cards => [
 		uniqueIndex('cards_oid_game_unique').on(Cards.oid, Cards.game),
-		index('cards_oid_index').on(Cards.oid),
 		index('cards_name_index').on(Cards.name),
+		index('cards_game_index').on(Cards.game),
 	],
 )
 
@@ -47,6 +52,7 @@ export const CardTextAttributes = pgTable('card_text_attributes',
 		value: text('value').notNull(),
 	},
 	CardAttributes => [
+		index('card_text_attributes_id_index').on(CardAttributes.id),
 		uniqueIndex('card_text_attributes_id_attribute_unique')
 			.on(CardAttributes.id, CardAttributes.attribute),
 		index('card_text_attributes_attribute_value_check_index')
@@ -63,6 +69,7 @@ export const CardNumericAttributes = pgTable('card_numeric_attributes',
 		value: decimal('value').notNull(),
 	},
 	CardAttributes => [
+		index('card_numeric_attributes_id_index').on(CardAttributes.id),
 		uniqueIndex('card_numeric_attributes_id_attribute_unique')
 			.on(CardAttributes.id, CardAttributes.attribute),
 		index('card_numeric_attributes_attribute_value_check_index')
@@ -79,6 +86,7 @@ export const CardBooleanAttributes = pgTable('card_boolean_attributes',
 		value: boolean('value').notNull(),
 	},
 	CardAttributes => [
+		index('card_boolean_attributes_id_index').on(CardAttributes.id),
 		uniqueIndex('card_boolean_attributes_id_attribute_unique')
 			.on(CardAttributes.id, CardAttributes.attribute),
 		index('card_boolean_attributes_attribute_value_check_index')

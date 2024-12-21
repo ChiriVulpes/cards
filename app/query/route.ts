@@ -251,7 +251,7 @@ export const GET = JSONEndpoint(async (request, response) => {
 	const page = query?.page ?? 1
 	const pageSize = query?.page_size ?? DEFAULT_PAGE_SIZE
 
-	const q = db
+	const cards = await db
 		.selectDistinct({
 			id: CardOutputs.id,
 			oid: CardOutputs.oid,
@@ -305,10 +305,6 @@ export const GET = JSONEndpoint(async (request, response) => {
 				//#endregion
 				////////////////////////////////////
 			))
-
-	console.log(q.toSQL().sql)
-
-	const cards = await q
 
 	const has_more = cards.length > pageSize
 	response.extension = { page, has_more }
